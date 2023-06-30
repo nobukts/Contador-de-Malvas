@@ -5,3 +5,5 @@ Software cuyo propósito es el poder detectar malvas volteadas durante el proces
 # Google Colab usando YOLO (You Only Look Once) NAS
 
 <a href="https://colab.research.google.com/drive/1xMb_IwNNzTeedj3J-mrWF0pvUJffVo-W?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
+
+En el link de Google Colab se encuentra la IA utilizando el método de detección YOLO NAS que se encuentra pre-entrenada con algunos objetos y seres, como autos y personas.
