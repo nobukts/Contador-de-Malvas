@@ -57,7 +57,7 @@ def elegir_imagen():
 image = None
 
 root = Tk()
-root.geometry('1000x500+50+50')
+root.geometry('1000x800+50+50')
 root.title("Contador de malvas")
 
 lblInputImage1 = Label(root)
