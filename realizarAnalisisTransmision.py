@@ -6,12 +6,35 @@ import cv2
 import imutils
 import numpy as np
 
+global analisis
+global lblInputImage1
+global lblInputImage2
+global lblInfo3
+global image
+        
+def iniciarAnalisis3():
+    analisis = Tk()
+    analisis.geometry('1000x800+50+50')
+    analisis.title("Contador de malvas")
+
+    lblInputImage1 = Label(analisis)
+    lblInputImage1.grid(column=0,row=2)
+    lblInputImage2 = Label(analisis)
+    lblInputImage2.grid(column=1,row=2)
+    lblInfo3 = Label(analisis)
+    lblInfo3.grid(column=1, row=3)
+
+    btn = Button(analisis, text="Elegir imagen", width=25, command=elegir_imagen)
+    btn.grid(column=0, row=0)
+
+
+    analisis.mainloop()
+        
 def elegir_imagen():
     path_image = filedialog.askopenfilename(filetypes=[("image", ".jpg"),
                                                        ("image", ".jpeg"),
                                                        ("image",".png")])
     if len(path_image) > 0:
-        global image
         #obtención de imagen
         image = cv2.imread(path_image)
         imagen = image
@@ -48,28 +71,8 @@ def elegir_imagen():
         lblInputImage2.image = img2
 
         #Insertar texto correspondiente a la imagen        
-        lblInfo1 = Label(root, text="IMAGEN ORIGINAL")
-        lblInfo2 = Label(root, text="IMAGEN ANALIZADA")
+        lblInfo1 = Label(analisis, text="IMAGEN ORIGINAL")
+        lblInfo2 = Label(analisis, text="IMAGEN ANALIZADA")
         lblInfo3.config(text=f"Contador: {len(contornos)}")
         lblInfo1.grid(column=0,row=1,padx=5,pady=5)
         lblInfo2.grid(column=1,row=1,padx=5,pady=5)
-
-image = None
-
-root = Tk()
-root.geometry('1000x800+50+50')
-root.title("Contador de malvas")
-
-lblInputImage1 = Label(root)
-lblInputImage1.grid(column=0,row=2)
-lblInputImage2 = Label(root)
-lblInputImage2.grid(column=1,row=2)
-lblInfo3 = Label(root)
-lblInfo3.grid(column=1, row=3)
-
-btn = Button(root, text="Elegir imagen", width=25, command=elegir_imagen)
-btn.grid(column=0, row=0)
-
-
-root.mainloop()
-
