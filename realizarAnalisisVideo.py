@@ -6,25 +6,59 @@ import cv2
 import imutils
 import numpy as np
 
-global analisis
-global lblInputImage1
-global lblInputImage2
-global lblInfo3
-global image
-        
+def loadConfiguration():
+    #Declarate globals variables
+    global textFont
+    global fontSize
+    global colorBg
+    global colorFg
+    #load config file
+    f = open("config.txt","r")
+    preConfgFontConditional = f.readline().split("\"")[1]
+    if preConfgFontConditional == "Verdana":
+        textFont = "Verdana"
+    if preConfgFontConditional == "Monospace":
+        textFont = "Monospace"
+    if preConfgFontConditional == "Consolas":
+        textFont = "Consolas"
+    preConfgSizeConditional = f.readline()[13:15]
+    if preConfgSizeConditional == "12":
+        fontSize = 12
+    if preConfgSizeConditional == "24":
+        fontSize = 24
+    if preConfgSizeConditional == "36":
+        fontSize = 36
+    preConfgDark = f.readline()
+    f.close()
+    if preConfgDark[11] == '1':
+        colorBg = '#26242f'
+        colorFg = '#ffffff'
+    else:
+        colorBg = '#ffffff'
+        colorFg = '#000000'
+
 def iniciarAnalisis2():
+    global analisis
+    global lblInputImage1
+    global lblInputImage2
+    global lblInfo3
+
+    #load config file
+    loadConfiguration()
+
     analisis = Tk()
+    analisis.config(bg=colorBg)
     analisis.geometry('1000x800+50+50')
     analisis.title("Contador de malvas")
 
-    lblInputImage1 = Label(analisis)
+    lblInputImage1 = Label(analisis, bg=colorBg, fg=colorFg)
     lblInputImage1.grid(column=0,row=2)
-    lblInputImage2 = Label(analisis)
+    lblInputImage2 = Label(analisis, bg=colorBg, fg=colorFg)
     lblInputImage2.grid(column=1,row=2)
-    lblInfo3 = Label(analisis)
+    lblInfo3 = Label(analisis, bg=colorBg, fg=colorFg)
     lblInfo3.grid(column=1, row=3)
 
-    btn = Button(analisis, text="Elegir imagen", width=25, command=elegir_imagen)
+    btn = Button(analisis, text="Elegir imagen", width=25, command=elegir_imagen, bg=colorBg, fg=colorFg)
     btn.grid(column=0, row=0)
 
 
@@ -71,8 +105,8 @@ def elegir_imagen():
         lblInputImage2.image = img2
 
         #Insertar texto correspondiente a la imagen        
-        lblInfo1 = Label(analisis, text="IMAGEN ORIGINAL")
-        lblInfo2 = Label(analisis, text="IMAGEN ANALIZADA")
+        lblInfo1 = Label(analisis, text="IMAGEN ORIGINAL", bg=colorBg, fg=colorFg)
+        lblInfo2 = Label(analisis, text="IMAGEN ANALIZADA", bg=colorBg, fg=colorFg)
         lblInfo3.config(text=f"Contador: {len(contornos)}")
         lblInfo1.grid(column=0,row=1,padx=5,pady=5)
         lblInfo2.grid(column=1,row=1,padx=5,pady=5)

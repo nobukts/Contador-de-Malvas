@@ -11,3 +11,10 @@ En el link de Google Colab se encuentra la IA utilizando el método de detecció
 # Prototipo Interfaz
 
 En la carpeta "PrototipoContornosInterfaz" se encuentra el prototipo de la interfaz, que utiliza un método de detección basado en el contraste de los colores.
+
+# Instrucción de instalación
+
+pip install opencv-python
+pip install Pillow
+pip install tk
+pip install imutils

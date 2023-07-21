@@ -1,0 +1,3 @@
+letterType = "Monospace"
+letterSize = 24
+darkMode = 1
