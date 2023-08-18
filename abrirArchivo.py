@@ -1,61 +1,40 @@
 from tkinter import *
-from realizarAnalisisFoto import iniciarAnalisis1
-from realizarAnalisisVideo import iniciarAnalisis2
-from realizarAnalisisTransmision import iniciarAnalisis3
+import customtkinter
+from cargarConfig import loadConfiguration
+from realizarAnalisisFoto import AnalisisFoto
+from realizarAnalisisVideo import AnalisisVideo
+from realizarAnalisisTransmision import AnalisisTransmision
 
-def loadConfiguration():
-    #Declarate globals variables
-    global textFont
-    global fontSize
-    global colorBg
-    global colorFg
-    #load config file
-    f = open("config.txt","r")
-    preConfgFontConditional = f.readline().split("\"")[1]
-    if preConfgFontConditional == "Verdana":
-        textFont = "Verdana"
-    if preConfgFontConditional == "Monospace":
-        textFont = "Monospace"
-    if preConfgFontConditional == "Consolas":
-        textFont = "Consolas"
-    preConfgSizeConditional = f.readline()[13:15]
-    if preConfgSizeConditional == "12":
-        fontSize = 12
-    if preConfgSizeConditional == "24":
-        fontSize = 24
-    if preConfgSizeConditional == "36":
-        fontSize = 36
-    preConfgDark = f.readline()
-    f.close()
-    if preConfgDark[11] == '1':
-        colorBg = '#26242f'
-        colorFg = '#ffffff'
-    else:
-        colorBg = '#ffffff'
-        colorFg = '#000000'
+class AbrirArchivo(customtkinter.CTkToplevel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-def abrirArchivo():
-    #load config file
-    loadConfiguration()
-    
-    nuevaVentana = Tk()
-    nuevaVentana.config(bg=colorBg)
-    nuevaVentana.minsize(620,350)
-    
-    text = Label(nuevaVentana,text="Elegir formato de análisis", bg=colorBg,fg=colorFg)
-    text.pack()
-    text.config(font=(textFont,fontSize+12))
-    
-    cell1 = Button(nuevaVentana, text="Imagen", width=10, command=iniciarAnalisis1, bg=colorBg,fg=colorFg)
-    cell1.config(font=(textFont,fontSize))
-    cell1.pack()
-    
-    cell2 = Button(nuevaVentana,text="Vídeo", width=10, command=iniciarAnalisis2, bg=colorBg,fg=colorFg)
-    cell2.config(font=(textFont,fontSize))
-    cell2.pack(pady=30)
+        # configure window
+        self.title("Abrir archivo")
+        self.geometry(f"{600}x{350}")
+        self.minsize(600,350)
+        self.maxsize(600,350)
 
-    cell3 = Button(nuevaVentana,text="En vivo", width=10, command=iniciarAnalisis3, bg=colorBg,fg=colorFg)
-    cell3.config(font=(textFont,fontSize))
-    cell3.pack()
-    
-    nuevaVentana.mainloop()
+        #Load configuration
+        textFont, fontSize, darkMode = loadConfiguration()
+
+        # configure grid layout (4x4)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure((0, 1, 2), weight=1)
+
+        self.root = customtkinter.CTkFrame(self, width=140, corner_radius=0)
+        self.root.grid(row=0, column=1, rowspan=4, sticky="nsew")
+        self.root.grid_rowconfigure(4, weight=1)
+        
+        #widgets
+        self.text = customtkinter.CTkLabel(self.root, text="Elegir formato de análisis", font=(textFont,fontSize+12))
+        self.text.pack(pady=30)
+
+        self.cell1 = customtkinter.CTkButton(self.root, text="Imagen", width=10, font=(textFont,fontSize), command=AnalisisFoto)
+        self.cell1.pack()
+
+        self.cell1 = customtkinter.CTkButton(self.root, text="Video", width=10, font=(textFont,fontSize), command=AnalisisVideo)
+        self.cell1.pack(pady=30)
+
+        self.cell1 = customtkinter.CTkButton(self.root, text="En vivo", width=10, font=(textFont,fontSize), command=AnalisisTransmision)
+        self.cell1.pack()

@@ -1,3 +1,3 @@
-letterType = "Monospace"
+letterType = "Verdana"
 letterSize = 24
 darkMode = 1
