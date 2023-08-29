@@ -18,3 +18,5 @@ pip install opencv-python
 pip install Pillow
 pip install tk
 pip install imutils
+pip install pandas
+pip install roboflow

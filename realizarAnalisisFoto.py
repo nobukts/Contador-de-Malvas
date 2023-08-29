@@ -1,35 +1,34 @@
-from tkinter import *
 import customtkinter
+from page import Page
 from cargarConfig import loadConfiguration
 from tkinter import filedialog
 import cv2
 import imutils
 from PIL import Image, ImageTk
+import pandas as pd
+from roboflow import Roboflow
 
-class AnalisisFoto(customtkinter.CTk):
-    def __init__(self):
-        super().__init__()
+#Cargar el roboflow
+rf = Roboflow(api_key="nVylWKmHkJCkIKm4GEd7")
+project = rf.workspace().project("malvas")
+model = project.version(5).model
 
-        #Load configuration
+class AnalisisFotoPage(Page):
+    def __init__(self, master):
+        super().__init__(master)
         textFont, fontSize, darkMode = loadConfiguration()
-
-        #Configure windows
-        self.title("Analisis de fotos.py")
-        self.geometry(f"{850}x{650}")
-        self.minsize(600,350)
         
-        # configure grid layout (4x4)
-        self.grid_columnconfigure((0, 1, 2), weight=1)
-        self.grid_rowconfigure((0, 1, 2), weight=1)
+        self.frame.grid_columnconfigure((0, 1, 2), weight=1)
+        self.frame.grid_rowconfigure((0, 1, 2), weight=1)
 
-        self.root = customtkinter.CTkFrame(self, width=140, corner_radius=0)
+        self.root = customtkinter.CTkFrame(self.frame, width=140, corner_radius=0)
         self.root.grid(row=1, column=1, sticky="nsew")
         self.root.grid_columnconfigure((0,1),weight=1)
         self.root.grid_rowconfigure((0,1), weight=1)
 
         self.rootAnalisis = customtkinter.CTkFrame(self.root, width=140, corner_radius=0)
         self.rootAnalisis.grid(row=0, rowspan=2, column=1)
-        self.rootAnalisis.grid_rowconfigure((0,1,2,3), weight=1)
+        self.rootAnalisis.grid_rowconfigure((0,1,2,3,4), weight=1)
 
         #Pantalla de inicio
         self.cell1 = customtkinter.CTkButton(self.root, text="Cambiar foto", width=25, command=self.elegir_imagen)
@@ -38,59 +37,80 @@ class AnalisisFoto(customtkinter.CTk):
         self.lblInputImage1 = customtkinter.CTkLabel(self.root, text="")
         self.lblInputImage1.grid(row=0, column=0)
 
-        self.lblInputImage2 = customtkinter.CTkLabel(self.root, text="")
-        self.lblInputImage2.grid(row=0, column=0)
-
         self.text = customtkinter.CTkLabel(self.rootAnalisis, text="Análisis", font=(textFont,fontSize+12))
         self.text.grid(column=0, pady=10)
 
-        self.lblInfo3 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas: 0", font=(textFont,fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo3 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas buenas: 0", font=(textFont,fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo3.grid(row=1, pady=5, padx=5)
-        self.lblInfo4 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas volteadas: 0", font=(textFont,fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo4 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas malas: 0", font=(textFont,fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo4.grid(row=2, pady=15, padx=5)
+        self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
+        self.lblInfo6.grid(row=3, pady=5)
+
+        self.error = customtkinter.CTkLabel(self.rootAnalisis, text="Primero debe analizar foto")
+
+        self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(textFont, fontSize), command=self.volver, fg_color='dark red')
+        self.volver_button.grid(row=2, column=1, pady=30)
+
+    def exportar_excel(self):
+        try:
+            df = pd.DataFrame([[contMalvaBuena,contMalvaMala],['c','d']],
+                          index=['analisis 1', 'analisis 2'],
+                          columns=['Buenas','Malas'])
+            df.to_excel("exportado.xlsx")
+            self.error.grid_forget()
+            print(df.head(5))
+        except Exception as e:
+            print("Primero analice la foto")
+            self.error.grid(row=4)
         
-        self.mainloop()
     
     def elegir_imagen(self):
         path_image = filedialog.askopenfilename(filetypes=[("image", ".jpg"),
                                                         ("image", ".jpeg"),
                                                         ("image",".png")])
         if len(path_image) > 0:
+            global contMalvaBuena, contMalvaMala
             #obtención de imagen
-            image = cv2.imread(path_image)
-            imagen = image
+            imagen = cv2.imread(path_image)
 
-            #redimensionar imagen
-            image = imutils.resize(image, height=500)
-            imagen = imutils.resize(imagen, height=500)
+            response = model.predict(path_image, confidence=80, overlap=30).json() #json en donde estan las predicciones del modelo
 
-            #redimensionar imagen que se va colocar en la ventana
-            imageToShow = imutils.resize(image, width=300)
-            imageToShow2 = imutils.resize(imagen, width=300)
+            contMalvaMala = 0
+            contMalvaBuena = 0
+            font = cv2.FONT_HERSHEY_TRIPLEX
 
-            #cambiar paleta de colores para utilizar en la ventana
-            imageToShow = cv2.cvtColor(imageToShow, cv2.COLOR_BGR2RGB) 
+            for pred in response['predictions']: #recorrer el json de predictions
+
+                x1 = pred['x'] - int(pred['width']/2) #coordenada X en donde empieza se empieza a dibujar el rectangulo para seleccionar malva 
+                y1 = pred['y'] - int(pred['height']/2) #coordenada Y en donde empieza se empieza a dibujar el rectangulo para seleccionar malva 
+
+                x2 = x1 + pred['width'] #coordenada X en donde empieza se termina de dibujar el rectangulo para seleccionar malva 
+                y2 = y1 + pred['height'] #coordenada Y en donde empieza se termina de dibujar el rectangulo para seleccionar malva 
+                
+                if pred['class'] == 'malvaBuena': 
+                    cv2.rectangle(imagen,(x1,y1),(x2,y2),(0,102,0),3)#(imagen,(x1,y1),(x2,y2),(B,G,R),grosor) funcion para dibujar rectangulos en la imagen
+                    cv2.putText(imagen, 'malvaBuena', (x1,y1-5), font,0.75,(0,102,0),2,cv2.LINE_AA) #funcion para escribir texto en la imagen
+                    contMalvaBuena = contMalvaBuena + 1
+
+                if pred['class'] == 'malvaMala':
+                    cv2.rectangle(imagen,(x1,y1),(x2,y2),(0,0,255),3)#(imagen,(x1,y1),(x2,y2),(B,G,R),grosor)
+                    cv2.putText(imagen, 'malvaMala', (x1,y1-5), font,0.75,(0,0,255),2,cv2.LINE_AA)
+                    contMalvaMala = contMalvaMala + 1
+            
+            self.lblInfo3.configure(text=f"Cantidad de malvas buenas: {contMalvaBuena}")
+            self.lblInfo4.configure(text=f"Cantidad de malvas malas: {contMalvaMala}")
+
+            """ cv2.imwrite("fotos/rectangulos1.jpg", imagen) """ #funcion para guardar la imagen en la ruta especificada
+            
+            imageToShow2 = imutils.resize(imagen, width=500)
             imageToShow2 = cv2.cvtColor(imageToShow2, cv2.COLOR_BGR2RGB)
-
-            #generar bordes de la imagen a analizar
-            bordes = cv2.Canny(imageToShow2, 100, 600)
-            contornos, _ = cv2.findContours(bordes, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-            #dibujar contornos en la imagen
-            cv2.drawContours(imageToShow2, contornos, -1, (0, 255, 0), 2)
-
-            #guardar resultados en variables para mostrar en la ventana
-            im = Image.fromarray(imageToShow)
+            im = Image.fromarray(imageToShow2)
             img = ImageTk.PhotoImage(image=im, size=(30,30))
-            im2 = Image.fromarray(imageToShow2)
-            img2 = ImageTk.PhotoImage(image=im2, size=(30,30))
 
-            #insertar imagen en la ventana
             self.lblInputImage1.configure(image=img)
-            self.lblInputImage1.image = img
-            self.lblInputImage2.configure(image=img2)
-            self.lblInputImage2.image = img2
 
-            #Insertar texto correspondiente a la imagen
-            self.lblInfo3.configure(text=f"Cantidad de malvas: {len(contornos)}")
-            self.lblInfo4.configure(text=f"Cantidad de malvas volteadas: {len(contornos)}")
+
+    def volver(self):
+        self.hide()
+        self.master.show_abrir_archivo_page() 
