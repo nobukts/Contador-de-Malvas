@@ -1,42 +1,36 @@
 from tkinter import *
 import customtkinter
+from page import Page
 from cargarConfig import loadConfiguration
 from tkinter import filedialog
-import cv2
-import imutils
-from PIL import Image, ImageTk
+from tkVideoPlayer import TkinterVideo
+import pandas as pd
 
-class AnalisisVideo(customtkinter.CTk):
-    def __init__(self):
-        super().__init__()
+class AnalisisVideoPage(Page):
+    def __init__(self,master):
+        super().__init__(master)
 
         #Load configuration
         textFont, fontSize, darkMode = loadConfiguration()
 
         #Configure windows
-        self.title("Analisis de video.py")
-        self.geometry(f"{850}x{650}")
-        self.minsize(600,350)
+        # self.title("Analisis de video.py")
+        # self.geometry(f"{850}x{650}")
+        # self.minsize(600,350)
         
         # configure grid layout (4x4)
-        self.grid_columnconfigure((0, 1, 2), weight=1)
-        self.grid_rowconfigure((0, 1, 2), weight=1)
+        self.frame.grid_columnconfigure((0, 1, 2), weight=1)
+        self.frame.grid_rowconfigure((0, 1, 2), weight=1)
 
-        self.root = customtkinter.CTkFrame(self, width=140, corner_radius=0)
+        self.root = customtkinter.CTkFrame(self.frame, width=140, corner_radius=0)
         self.root.grid(row=1, column=1, sticky="nsew")
         self.root.grid_columnconfigure((0,1),weight=1)
         self.root.grid_rowconfigure((0,1), weight=1)
 
+        #Configurar analisis
         self.rootAnalisis = customtkinter.CTkFrame(self.root, width=140, corner_radius=0)
         self.rootAnalisis.grid(row=0, rowspan=2, column=1)
-        self.rootAnalisis.grid_rowconfigure((0,1,2,3), weight=1)
-
-        #Pantalla de inicio
-        self.cell1 = customtkinter.CTkButton(self.root, text="Elegir video", width=25, command=self.elegir_video)
-        self.cell1.grid(row=1, column=0)
-
-        self.lblInputVideo1 = customtkinter.CTkLabel(self.root, text="")
-        self.lblInputVideo1.grid(row=0, column=0)
+        self.rootAnalisis.grid_rowconfigure((0,1,2,3,4), weight=1)
 
         self.text = customtkinter.CTkLabel(self.rootAnalisis, text="Análisis", font=(textFont,fontSize+12))
         self.text.grid(column=0, pady=10)
@@ -47,36 +41,44 @@ class AnalisisVideo(customtkinter.CTk):
         self.lblInfo4.grid(row=2, pady=5, padx=5)
         self.lblInfo5 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas por minuto: 0", font=(textFont,fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo5.grid(row=3, pady=15, padx=5)
+        self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
+        self.lblInfo6.grid(row=4, pady=5)
+
+        #Configurar video
+        self.rootZonaVideo = customtkinter.CTkFrame(self.root, corner_radius=0, fg_color="transparent")
+        self.rootZonaVideo.grid(row=0, rowspan=2, column=0, ipadx=130, ipady=80)
+
+        self.lblInputVideo1 = TkinterVideo(self.rootZonaVideo)
         
-        self.mainloop()
+
+        self.cell1 = customtkinter.CTkButton(self.rootZonaVideo, text="Elegir video", width=25, command=self.elegir_video)
+        self.cell1.pack(pady=10, side=BOTTOM)
+
+        self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(textFont, fontSize), command=self.volver, fg_color='dark red')
+        self.volver_button.grid(row=2, column=1, pady=30)
+        
+    
+    def exportar_excel(self):
+        df = pd.read_excel("prueba.xlsx")
+        df.to_excel("COPIADO.xlsx")
+        print(df.head(5))
     
     def elegir_video(self):
         path_video = filedialog.askopenfilename(filetypes=[("video", ".mp4"),
                                                         ("video", ".mkv"),
                                                         ("video",".avi")])
+        self.lblInputVideo1.pack(expand=True, fill="both")
         if len(path_video) > 0:
-            """ #Se comenta porque se hará de distinta forma para la colocacion de un video
-            #obtención de video
-            video = cv2.imread(path_video)
-
-            #redimensionar video
-            video = imutils.resize(video, height=500)
-
-            #redimensionar video que se va colocar en la ventana
-            videoToShow = imutils.resize(video, width=300)
-
-            #cambiar paleta de colores para utilizar en la ventana
-            videoToShow = cv2.cvtColor(videoToShow, cv2.COLOR_BGR2RGB)
-
-            #guardar resultados en variables para mostrar en la ventana
-            vid = Image.fromarray(videoToShow)
-            img = ImageTk.PhotoImage(video=vid, size=(30,30))
-
-            #insertar video en la ventana
-            self.lblInputVideo1.configure(video=img)
-            self.lblInputVideo1.video = img """
+            #Cargar video y reproducirlo
+            self.lblInputVideo1.load(path_video)
+            self.lblInputVideo1.play()
+            
 
             #Insertar texto correspondiente a la video
             self.lblInfo3.configure(text=f"Cantidad de malvas: {0}")
             self.lblInfo4.configure(text=f"Cantidad de malvas volteadas: {0}")
             self.lblInfo5.configure(text=f"Cantidad de malvas por minuto: {0}")
+
+    def volver(self):
+        self.hide()
+        self.master.show_abrir_archivo_page() 
