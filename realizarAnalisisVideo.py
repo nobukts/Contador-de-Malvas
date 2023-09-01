@@ -89,6 +89,7 @@ class AnalisisVideoPage(Page):
         path_video = filedialog.askopenfilename(filetypes=[("video", ".mp4"),
                                                         ("video", ".mkv"),
                                                         ("video",".avi")])
+        self.lblInputVideo1.pack(expand=True, fill="both")
         if len(path_video) > 0:
             #Cargar el video
             cap = cv2.VideoCapture(path_video)
