@@ -7,6 +7,7 @@ import imutils
 from PIL import Image, ImageTk
 import pandas as pd
 from roboflow import Roboflow
+from datetime import datetime
 
 #Cargar el roboflow
 rf = Roboflow(api_key="nVylWKmHkJCkIKm4GEd7")
@@ -54,12 +55,15 @@ class AnalisisFotoPage(Page):
 
     def exportar_excel(self):
         try:
-            df = pd.DataFrame([[contMalvaBuena,contMalvaMala],['c','d']],
-                          index=['analisis 1', 'analisis 2'],
-                          columns=['Buenas','Malas'])
+            now = datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            current_date = now.strftime("%d-%m-%Y")
+            df = pd.read_excel('exportado.xlsx', index_col=0)
+            datos = pd.DataFrame([{'fecha':current_date,'hora':current_time,'Buenas':contMalvaBuena,'Malas':contMalvaMala}])
+            df = pd.concat([df, datos], ignore_index=True)
             df.to_excel("exportado.xlsx")
             self.error.grid_forget()
-            print(df.head(5))
+            print(df)
         except Exception as e:
             print("Primero analice la foto")
             self.error.grid(row=4)
