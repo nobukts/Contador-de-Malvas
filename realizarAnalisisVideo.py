@@ -12,7 +12,7 @@ from apikey import api_key
 
 #Cargar el roboflow
 rf = Roboflow(api_key)
-project = rf.workspace().project("malvas")
+project = rf.project("malvas")
 model = project.version(5).model
 
 class AnalisisVideoPage(Page):

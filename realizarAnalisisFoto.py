@@ -12,7 +12,7 @@ from apikey import api_key
 
 #Cargar el roboflow
 rf = Roboflow(api_key)
-project = rf.workspace().project("malvas")
+project = rf.project("malvas")
 model = project.version(5).model
 
 class AnalisisFotoPage(Page):
@@ -59,10 +59,10 @@ class AnalisisFotoPage(Page):
             now = datetime.now()
             current_time = now.strftime("%H:%M:%S")
             current_date = now.strftime("%d-%m-%Y")
-            df = pd.read_excel('exportado.xlsx', index_col=0)
+            df = pd.read_excel('../../exportado.xlsx', index_col=0)
             datos = pd.DataFrame([{'fecha':current_date,'hora':current_time,'Buenas':contMalvaBuena,'Malas':contMalvaMala}])
             df = pd.concat([df, datos], ignore_index=True)
-            df.to_excel("exportado.xlsx")
+            df.to_excel("../../exportado.xlsx")
             self.error.grid_forget()
             print(df)
         except Exception as e:

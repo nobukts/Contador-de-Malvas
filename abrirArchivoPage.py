@@ -15,7 +15,7 @@ class AbrirArchivoPage(Page):
         self.frame.grid_rowconfigure((0,1,2,3), weight=1)
         self.frame.grid_columnconfigure((0,1,2), weight=1)
 
-        self.text = customtkinter.CTkLabel(self.frame, text="Elegir formato de anÃ¡lisis", font=(textFont, fontSize + 12))
+        self.text = customtkinter.CTkLabel(self.frame, text="Elegir formato de análisis", font=(textFont, fontSize + 12))
         self.text.grid(row=0, column=1, columnspan=1, pady=30,padx=30, sticky="n")
 
         self.cell1 = customtkinter.CTkButton(self.frame, text="Imagen", width=10, font=(textFont, fontSize), command=self.analisis_imagen)
