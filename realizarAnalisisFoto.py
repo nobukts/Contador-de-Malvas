@@ -8,9 +8,10 @@ from PIL import Image, ImageTk
 import pandas as pd
 from roboflow import Roboflow
 from datetime import datetime
+from apikey import api_key
 
 #Cargar el roboflow
-rf = Roboflow(api_key="nVylWKmHkJCkIKm4GEd7")
+rf = Roboflow(api_key)
 project = rf.workspace().project("malvas")
 model = project.version(5).model
 

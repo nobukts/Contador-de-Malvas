@@ -12,17 +12,23 @@ class AbrirArchivoPage(Page):
         super().__init__(master)
         self.previous_page = previous_page
 
-        self.text = customtkinter.CTkLabel(self.frame, text="Elegir formato de análisis", font=(textFont, fontSize + 12))
-        self.text.pack(pady=30)
-        self.cell1 = customtkinter.CTkButton(self.frame, text="Imagen", width=10, font=(textFont, fontSize), command=self.analisis_imagen)
-        self.cell1.pack()
-        self.cell2 = customtkinter.CTkButton(self.frame, text="Video", width=10, font=(textFont, fontSize), command=self.analisis_video)
-        self.cell2.pack(pady=30)
-        self.cell3 = customtkinter.CTkButton(self.frame, text="En vivo", width=10, font=(textFont, fontSize), command=self.analisis_transmision)
-        self.cell3.pack()
+        self.frame.grid_rowconfigure((0,1,2,3), weight=1)
+        self.frame.grid_columnconfigure((0,1,2), weight=1)
 
-        volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(textFont, fontSize), command=self.volver, fg_color = 'dark red'  )
-        volver_button.pack(pady=30)
+        self.text = customtkinter.CTkLabel(self.frame, text="Elegir formato de anÃ¡lisis", font=(textFont, fontSize + 12))
+        self.text.grid(row=0, column=1, columnspan=1, pady=30,padx=30, sticky="n")
+
+        self.cell1 = customtkinter.CTkButton(self.frame, text="Imagen", width=10, font=(textFont, fontSize), command=self.analisis_imagen)
+        self.cell1.grid(row=1, column=1, pady=30,padx=30, sticky="nsew")
+
+        self.cell2 = customtkinter.CTkButton(self.frame, text="Video", width=10, font=(textFont, fontSize), command=self.analisis_video)
+        self.cell2.grid(row=2, column=1, pady=30,padx=30, sticky="nsew")
+
+        self.cell3 = customtkinter.CTkButton(self.frame, text="En vivo", width=10, font=(textFont, fontSize), command=self.analisis_transmision)
+        self.cell3.grid(row=3, column=1, pady=30,padx=30, sticky="nsew")
+
+        volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(textFont, fontSize), command=self.volver, fg_color='dark red')
+        volver_button.grid(row=4, column=1, pady=30, padx=30 , sticky="nsew")
 
     def analisis_imagen(self):
         self.master.show_analisis_foto_page()

@@ -28,6 +28,9 @@ class MainPage(Page):
         self.cell3 = customtkinter.CTkButton(self.frame, text="Ayuda", width=10, font=(textFont, fontSize), command=self.mostrar_ayuda)
         self.cell3.grid(row=3, column=1, pady=30,padx=30, sticky="nsew")  # Use sticky="nsew" for center alignment
 
+        self.exit_button = customtkinter.CTkButton(self.frame, text="Salir", width=10, font=(textFont, fontSize),fg_color='dark red', command=self.master.destroy)
+        self.exit_button.grid(row=4, column=1, pady=30, padx=30, sticky="nsew")
+
     def mostrar_ayuda(self):
         self.hide()
         self.master.show_ayuda_page()
