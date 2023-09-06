@@ -7,12 +7,12 @@ from realizarAnalisisFoto import AnalisisFotoPage
 from realizarAnalisisVideo import AnalisisVideoPage
 from realizarAnalisisTransmision import AnalisisTransmisionPage
 import customtkinter
-from cargarConfig import loadConfiguration
+from settings import app_settings
 
-# Cargar la configuración
-textFont, fontSize, darkMode = loadConfiguration()
-
-customtkinter.set_appearance_mode(darkMode)
+# Convierte el valor booleano a una cadena "dark" o "light"
+mode_string = "dark" if app_settings.darkMode else "light"
+# Establece el modo de apariencia
+customtkinter.set_appearance_mode(mode_string)
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 class App(customtkinter.CTk):
@@ -29,12 +29,17 @@ class App(customtkinter.CTk):
 
         self.main_page = MainPage(self)
         self.ayuda_page = AyudaPage(self)
+        self.abrir_archivo_page = AbrirArchivoPage(self,self.main_page)
+        self.analisis_foto = AnalisisFotoPage(self)
+        self.analisis_video = AnalisisVideoPage(self)
+        self.analisis_transmision = AnalisisTransmisionPage(self)
+        self.preferencias_page = PreferenciasPage(self, self.main_page,self.abrir_archivo_page,self.analisis_foto,self.analisis_video,self.analisis_transmision)
         
         self.pages = {
             "main": self.main_page,
             "ayuda": self.ayuda_page,
             "abrir_archivo": AbrirArchivoPage(self, self.main_page),
-            "preferencias": PreferenciasPage(self, self.main_page),
+            "preferencias": PreferenciasPage(self, self.main_page,self.abrir_archivo_page,self.analisis_foto,self.analisis_video,self.analisis_transmision),
             "analisis_foto": AnalisisFotoPage(self),
             "analisis_video": AnalisisVideoPage(self),
             "analisis_transmision": AnalisisTransmisionPage(self),

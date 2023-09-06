@@ -1,6 +1,5 @@
 import customtkinter
 from page import Page
-from cargarConfig import loadConfiguration
 from tkinter import filedialog
 import cv2
 import imutils
@@ -9,6 +8,7 @@ import pandas as pd
 from roboflow import Roboflow
 from datetime import datetime
 from apikey import api_key
+from settings import app_settings
 
 #Cargar el roboflow
 rf = Roboflow(api_key)
@@ -18,40 +18,43 @@ model = project.version(5).model
 class AnalisisFotoPage(Page):
     def __init__(self, master):
         super().__init__(master)
-        textFont, fontSize, darkMode = loadConfiguration()
+        app_settings.load_configuration()
         
         self.frame.grid_columnconfigure((0, 1, 2), weight=1)
         self.frame.grid_rowconfigure((0, 1, 2), weight=1)
 
+        self.textFont = app_settings.textFont
+        self.fontSize = app_settings.fontSize
+
         self.root = customtkinter.CTkFrame(self.frame, width=140, corner_radius=0)
         self.root.grid(row=1, column=1, sticky="nsew")
-        self.root.grid_columnconfigure((0,1),weight=1)
-        self.root.grid_rowconfigure((0,1), weight=1)
+        self.root.grid_columnconfigure((0, 1), weight=1)
+        self.root.grid_rowconfigure((0, 1), weight=1)
 
         self.rootAnalisis = customtkinter.CTkFrame(self.root, width=140, corner_radius=0)
         self.rootAnalisis.grid(row=0, rowspan=2, column=1)
-        self.rootAnalisis.grid_rowconfigure((0,1,2,3,4), weight=1)
+        self.rootAnalisis.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
 
-        #Pantalla de inicio
+        # Pantalla de inicio
         self.cell1 = customtkinter.CTkButton(self.root, text="Cambiar foto", width=25, command=self.elegir_imagen)
         self.cell1.grid(row=1, column=0)
 
         self.lblInputImage1 = customtkinter.CTkLabel(self.root, text="")
         self.lblInputImage1.grid(row=0, column=0)
 
-        self.text = customtkinter.CTkLabel(self.rootAnalisis, text="Análisis", font=(textFont,fontSize+12))
+        self.text = customtkinter.CTkLabel(self.rootAnalisis, text="Análisis", font=(self.textFont, self.fontSize + 12))
         self.text.grid(column=0, pady=10)
 
-        self.lblInfo3 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas buenas: 0", font=(textFont,fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo3 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas buenas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8", "#3a3a3a"), text_color=("black", "white"), padx=10)
         self.lblInfo3.grid(row=1, pady=5, padx=5)
-        self.lblInfo4 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas malas: 0", font=(textFont,fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo4 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8", "#3a3a3a"), text_color=("black", "white"), padx=10)
         self.lblInfo4.grid(row=2, pady=15, padx=5)
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
         self.lblInfo6.grid(row=3, pady=5)
 
         self.error = customtkinter.CTkLabel(self.rootAnalisis, text="Primero debe analizar foto")
 
-        self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(textFont, fontSize), command=self.volver, fg_color='dark red')
+        self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(self.textFont, self.fontSize), command=self.volver, fg_color='dark red')
         self.volver_button.grid(row=2, column=1, pady=30)
 
     def exportar_excel(self):
@@ -119,3 +122,13 @@ class AnalisisFotoPage(Page):
     def volver(self):
         self.hide()
         self.master.show_abrir_archivo_page() 
+
+    def update_widgets_font_and_size(self):
+        # Actualizar la fuente y el tamaño de letra de los widgets en esta página
+        self.textFont = app_settings.textFont
+        self.fontSize = app_settings.fontSize
+
+        self.text.configure(font=(self.textFont, self.fontSize + 12))
+        self.lblInfo3.configure(font=(self.textFont, self.fontSize))
+        self.lblInfo4.configure(font=(self.textFont, self.fontSize))
+        self.volver_button.configure(font=(self.textFont, self.fontSize))

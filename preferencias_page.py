@@ -1,16 +1,24 @@
 from tkinter import *
 import customtkinter
 from page import Page
-from cargarConfig import loadConfiguration
+# from cargarConfig import loadConfiguration
+from settings import app_settings
 
 class PreferenciasPage(Page):
-    def __init__(self, master, previous_page):
+    def __init__(self, master, previous_page,abrir_archivo,analisis_foto,analisis_video,analisis_transmision):
         super().__init__(master)
         self.previous_page = previous_page
-        
+        self.abrir_archivo = abrir_archivo
+        self.analisis_foto = analisis_foto
+        self.analisis_video = analisis_video
+        self.analisis_transmision = analisis_transmision
 
         #Load configuration
-        textFont, fontSize, darkMode = loadConfiguration()
+        app_settings.load_configuration()
+        textFont = app_settings.textFont
+        fontSize = app_settings.fontSize
+        darkMode = app_settings.darkMode
+
         if fontSize == 12:
             fontSizeString = "Pequeño"
         elif fontSize == 24:
@@ -33,7 +41,7 @@ class PreferenciasPage(Page):
         self.listaTamaño = customtkinter.CTkComboBox(self.frame,state="readonly", values=["Pequeño", "Mediano", "Grande"], command=self.saveFontSize, variable=valorPrevio)
         
         self.modoOscuro = customtkinter.CTkLabel(self.frame, text="Modo Oscuro", font=(textFont,fontSize))
-        self.switch_var = customtkinter.StringVar(value=darkMode)
+        self.switch_var = customtkinter.StringVar(value="dark" if darkMode else "light")
         self.switchMode = customtkinter.CTkSwitch(self.frame,text="", command=self.switch_event, variable=self.switch_var, onvalue="dark", offvalue="light")
 
         
@@ -53,41 +61,34 @@ class PreferenciasPage(Page):
         self.previous_page.show()
 
     def switch_event(self):
-        f = open("config.txt", "r")
-        contentFile = f.readline() + f.readline()
-        f.close()
 
-        f = open("config.txt", "w")
+        mode_string = "dark" if self.switch_var.get() == "dark" else "light"
+        customtkinter.set_appearance_mode(mode_string)
+        
         if self.switch_var.get() == "light":
-            customtkinter.set_appearance_mode("light")
-            f.write(contentFile + "darkMode = 0")
+            app_settings.update_dark_mode(False)
         else:
-            customtkinter.set_appearance_mode("dark")
-            f.write(contentFile + "darkMode = 1")
-        f.close()
+            app_settings.update_dark_mode(True)
+        
+        app_settings.save_configuration()
 
     def saveFontType(self, choice):
-        f = open("config.txt", "r")
-        contentFile = f.readlines()[1:3]
-        fontSize = contentFile[0][13:15]
-        f.close()
 
-        f = open("config.txt", "w")
         if self.listaFuentes.get() == "Verdana":
-            f.write("letterType = \"Verdana\"\n" + contentFile[0] + contentFile[1])
-            textFont = "Verdana"
+            app_settings.update_font("Verdana")
         elif self.listaFuentes.get() == "Monospace":
-            f.write("letterType = \"Monospace\"\n" + contentFile[0] + contentFile[1])
-            textFont = "Monospace"
+            app_settings.update_font("Monospace")
         elif self.listaFuentes.get() == "Consolas":
-            f.write("letterType = \"Consolas\"\n" + contentFile[0] + contentFile[1])
-            textFont = "Consolas"
+            app_settings.update_font("Consolas")
 
-        self.fuente.configure(font=(textFont, int(fontSize)))
-        self.tamaño.configure(font=(textFont, int(fontSize)))
-        self.modoOscuro.configure(font=(textFont, int(fontSize)))
-        
-        f.close()
+        app_settings.save_configuration()
+        self.update_widgets_font_and_size()
+
+        self.previous_page.update_widgets_font_and_size()
+        self.abrir_archivo.update_widgets_font_and_size()
+        self.analisis_foto.update_widgets_font_and_size()
+        self.analisis_video.update_widgets_font_and_size()
+        self.analisis_transmision.update_widgets_font_and_size()
 
     def saveFontSize(self, choice):
         f = open("config.txt", "r")
@@ -108,11 +109,25 @@ class PreferenciasPage(Page):
             f.write(contentFile + "letterSize = 36\n" + contentFile2)
             fontSize = 36
 
-        self.titulo.configure(font=(textFont, int(fontSize+12)))
-        self.fuente.configure(font=(textFont, int(fontSize)))
-        self.tamaño.configure(font=(textFont, int(fontSize)))
-        self.modoOscuro.configure(font=(textFont, int(fontSize)))
+        app_settings.update_font_size(fontSize)
+        app_settings.save_configuration()
+        self.update_widgets_font_and_size()
+
+        self.previous_page.update_widgets_font_and_size()
+        self.abrir_archivo.update_widgets_font_and_size()
+        self.analisis_foto.update_widgets_font_and_size()
+        self.analisis_video.update_widgets_font_and_size()
+        self.analisis_transmision.update_widgets_font_and_size()
+
         f.close()
+
+    def update_widgets_font_and_size(self):
+        # Actualizar la fuente y el tamaño de todos los widgets en la página
+        self.titulo.configure(font=(app_settings.textFont, int(app_settings.fontSize)+12))
+        self.fuente.configure(font=(app_settings.textFont, int(app_settings.fontSize)))
+        self.tamaño.configure(font=(app_settings.textFont, int(app_settings.fontSize)))
+        self.modoOscuro.configure(font=(app_settings.textFont, int(app_settings.fontSize)))
+        self.volver_button.configure(font=(app_settings.textFont, int(app_settings.fontSize)))
 
     def show(self):
         self.frame.grid(row=1, column=1, sticky="nswe")
