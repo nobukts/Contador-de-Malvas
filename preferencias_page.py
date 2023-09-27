@@ -1,7 +1,6 @@
 from tkinter import *
 import customtkinter
 from page import Page
-# from cargarConfig import loadConfiguration
 from settings import app_settings
 
 class PreferenciasPage(Page):

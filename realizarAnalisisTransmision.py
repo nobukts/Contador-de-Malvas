@@ -28,9 +28,9 @@ class AnalisisTransmisionPage(Page):
         self.rootAnalisis.grid(row=0, rowspan=2, column=1)
         self.rootAnalisis.grid_rowconfigure((0,1,2,3,4), weight=1)
 
-        #Pantalla de inicio
-        self.cell1 = customtkinter.CTkButton(self.root, text="Detectar camara", width=25, command=self.update_frame)
-        self.cell1.grid(row=1, column=0)
+        # Pantalla de inicio
+        self.toggle_transmission_button = customtkinter.CTkButton(self.root, text="Iniciar Transmisión", width=25, command=self.toggle_transmission)
+        self.toggle_transmission_button.grid(row=1, column=0)
 
         self.lblInputImage1 = customtkinter.CTkLabel(self.root, text="")
         self.lblInputImage1.grid(row=0, column=0)
@@ -47,11 +47,45 @@ class AnalisisTransmisionPage(Page):
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
         self.lblInfo6.grid(row=4, pady=5)
         
-        self.cap = cv2.VideoCapture(0)
+        self.cap = None # Inicialmente, no hay captura activa
 
         self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(self.textFont, self.fontSize), command=self.volver, fg_color='dark red')
         self.volver_button.grid(row=3, column=1, pady=30)
-        
+
+        self.camera_list = self.get_camera_list()
+        self.camera_var = StringVar(self.frame)
+        if len(self.camera_list) > 0:
+            self.camera_var.set(self.camera_list[0])  # Establece la primera cámara como predeterminada
+
+        self.camera_dropdown = customtkinter.CTkOptionMenu(self.frame, variable=self.camera_var, values=self.camera_list)
+        self.camera_dropdown.grid(row=2, column=1, pady=10)
+        self.camera_dropdown.configure(width=130, height=40, font=(self.textFont, 16), dropdown_font=(self.textFont, 16))
+
+    def toggle_transmission(self):
+        if self.cap is None:
+            selected_camera_index = self.camera_list.index(self.camera_var.get())
+            self.cap = cv2.VideoCapture(selected_camera_index)
+            self.update_frame()  # Iniciar la transmisión
+            self.toggle_transmission_button.configure(text="Detener Transmisión")
+        else:
+            self.stop_transmission()  # Detener la transmisión
+            self.toggle_transmission_button.configure(text="Iniciar Transmisión")
+
+    def stop_transmission(self):
+        if self.cap is not None:
+            self.cap.release()  # Libera la captura de la cámara
+            self.cap = None
+            self.lblInputImage1.configure(image=None)
+
+    def get_camera_list(self):
+        # Obtener una lista de cámaras disponibles
+        camera_list = []
+        for i in range(10):  # Suponemos que hay 10 cámaras como máximo
+            cap = cv2.VideoCapture(i)
+            if cap.isOpened():
+                camera_list.append(f"Cámara {i + 1}")
+                cap.release()
+        return camera_list
     
     def exportar_excel(self):
         df = pd.read_excel("prueba.xlsx")
@@ -59,18 +93,19 @@ class AnalisisTransmisionPage(Page):
         print(df.head(5))
     
     def update_frame(self):
-        ret, frame = self.cap.read()
-        if ret:
-            frame = cv2.resize(frame, (400,400))
-            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            img = Image.fromarray(img)
-            imgtk = ImageTk.PhotoImage(image=img)
-            self.lblInputImage1.imgtk = imgtk
-            self.lblInputImage1.configure(image=imgtk)
-        self.frame.after(10,self.update_frame)
-        self.cell1.configure(text="Detectando...", command=None)
+        if self.cap is not None:
+            ret, frame = self.cap.read()
+            if ret:
+                frame = cv2.resize(frame, (400, 400))
+                img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(img)
+                imgtk = ImageTk.PhotoImage(image=img)
+                self.lblInputImage1.imgtk = imgtk
+                self.lblInputImage1.configure(image=imgtk)
+                self.frame.after(10, self.update_frame)
 
     def volver(self):
+        self.stop_transmission()  # Asegurarse de detener la transmisión antes de cambiar de página
         self.hide()
         self.master.show_abrir_archivo_page()
 
