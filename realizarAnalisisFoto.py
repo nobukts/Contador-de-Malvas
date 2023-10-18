@@ -5,15 +5,12 @@ import cv2
 import imutils
 from PIL import Image, ImageTk
 import pandas as pd
-from roboflow import Roboflow
 from datetime import datetime
-from apikey import api_key
 from settings import app_settings
+from ultralytics import YOLO
 
-#Cargar el roboflow
-rf = Roboflow(api_key)
-project = rf.project("malvas")
-model = project.version(5).model
+#Cargar el modelo
+model = YOLO("TrainModelMalva.pt")
 
 class AnalisisFotoPage(Page):
     def __init__(self, master):
@@ -79,44 +76,50 @@ class AnalisisFotoPage(Page):
                                                         ("image",".png")])
         if len(path_image) > 0:
             global contMalvaBuena, contMalvaMala
+            contMalvaMala = 0
+            contMalvaBuena = 0
             #obtención de imagen
             imagen = cv2.imread(path_image)
 
-            response = model.predict(path_image, confidence=80, overlap=30).json() #json en donde estan las predicciones del modelo
+            results = model([imagen])
 
-            contMalvaMala = 0
-            contMalvaBuena = 0
-            font = cv2.FONT_HERSHEY_TRIPLEX
+            for r in results:
+                boxes = r.boxes
+                for box in boxes:
+                    classMalvas = int(box.cls)
 
-            for pred in response['predictions']: #recorrer el json de predictions
-
-                x1 = pred['x'] - int(pred['width']/2) #coordenada X en donde empieza se empieza a dibujar el rectangulo para seleccionar malva 
-                y1 = pred['y'] - int(pred['height']/2) #coordenada Y en donde empieza se empieza a dibujar el rectangulo para seleccionar malva 
-
-                x2 = x1 + pred['width'] #coordenada X en donde empieza se termina de dibujar el rectangulo para seleccionar malva 
-                y2 = y1 + pred['height'] #coordenada Y en donde empieza se termina de dibujar el rectangulo para seleccionar malva 
-                
-                if pred['class'] == 'malvaBuena': 
-                    cv2.rectangle(imagen,(x1,y1),(x2,y2),(0,102,0),3)#(imagen,(x1,y1),(x2,y2),(B,G,R),grosor) funcion para dibujar rectangulos en la imagen
-                    cv2.putText(imagen, 'malvaBuena', (x1,y1-5), font,0.75,(0,102,0),2,cv2.LINE_AA) #funcion para escribir texto en la imagen
-                    contMalvaBuena = contMalvaBuena + 1
-
-                if pred['class'] == 'malvaMala':
-                    cv2.rectangle(imagen,(x1,y1),(x2,y2),(0,0,255),3)#(imagen,(x1,y1),(x2,y2),(B,G,R),grosor)
-                    cv2.putText(imagen, 'malvaMala', (x1,y1-5), font,0.75,(0,0,255),2,cv2.LINE_AA)
-                    contMalvaMala = contMalvaMala + 1
-            
-            self.lblInfo3.configure(text=f"Cantidad de malvas buenas: {contMalvaBuena}")
-            self.lblInfo4.configure(text=f"Cantidad de malvas malas: {contMalvaMala}")
-
-            """ cv2.imwrite("fotos/rectangulos1.jpg", imagen) """ #funcion para guardar la imagen en la ruta especificada
+                    #Dibujar
+                    x1, y1, x2, y2 = box.xyxy[0]
+                    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                    w, h = x2-x1, y2-y1
+                    cx, cy = x1+w//2, y1+h//2
+                    
+                    max_y = y1-27
+                    if max_y < 0:
+                        max_y = y1-max_y
+                    else:
+                        max_y = y1
+                    if classMalvas == 0:
+                        cv2.rectangle(imagen, (x1, y1), (x2, y2), (8,75,255), thickness=2) #Marca de la malva
+                        cv2.rectangle(imagen, (x1, max_y+3), (x1+200, max_y-27), (8,75,255), thickness=cv2.FILLED) #Rellenar fondo del texto
+                        cv2.putText(imagen, "Malva buena", (x1, max_y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 4) #Texto
+                        contMalvaBuena += 1
+                    else:
+                        cv2.rectangle(imagen, (x1, y1), (x2, y2), (0,0,255), thickness=2)
+                        cv2.rectangle(imagen, (x1, max_y+3), (x1+175, max_y-27), (0,0,255), thickness=cv2.FILLED) #Rellenar fondo del texto
+                        cv2.putText(imagen, "Malva Mala", (x1, max_y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 4)
+                        contMalvaMala += 1
             
             imageToShow2 = imutils.resize(imagen, width=500)
             imageToShow2 = cv2.cvtColor(imageToShow2, cv2.COLOR_BGR2RGB)
             im = Image.fromarray(imageToShow2)
             img = ImageTk.PhotoImage(image=im, size=(30,30))
 
+            self.lblInfo3.configure(text=f"Cantidad de malvas buenas: {contMalvaBuena}")
+            self.lblInfo4.configure(text=f"Cantidad de malvas malas: {contMalvaMala}")
+
             self.lblInputImage1.configure(image=img)
+            print("--------------------------------------HOLA-----------------------------------------")
 
 
     def volver(self):

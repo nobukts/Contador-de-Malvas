@@ -6,14 +6,11 @@ from tkinter import filedialog
 from tkVideoPlayer import TkinterVideo
 import pandas as pd
 import cv2
-from roboflow import Roboflow
 from datetime import datetime
-from apikey import api_key
+from ultralytics import YOLO
 
-#Cargar el roboflow
-rf = Roboflow(api_key)
-project = rf.project("malvas")
-model = project.version(5).model
+#Cargar el modelo
+model = YOLO("TrainModelMalva.pt")
 
 class AnalisisVideoPage(Page):
     def __init__(self,master):
@@ -102,19 +99,15 @@ class AnalisisVideoPage(Page):
             # Define the codec and create VideoWriter object to save the output
             output_path = "videoFinal.mp4"
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(output_path, fourcc, fps * 0.1, (frame_width, frame_height))
+            out = cv2.VideoWriter(output_path, fourcc, fps * 1, (frame_width, frame_height))
 
             #Definir variables
             global contMalvaBuena, contMalvaMala
-            contMalvaMala = 0 
-            contMalvaBuena = 0
-            contFrame = 0
-            contMalva = 0
-            font = cv2.FONT_HERSHEY_TRIPLEX
+            contMalvaBuena = []
+            contMalvaMala = []
 
-            #frames_to_skip = 10  # Analizar cada n fotograma
-            frames_to_skip = 15
-            frame_counter = 0
+            #Limit line
+            limits = [10,300,800,300]
 
             #definir punto de inicio y fin de linea a dibujar
             #startPoint = (0, frame_height // 2)
@@ -125,46 +118,41 @@ class AnalisisVideoPage(Page):
                 if not ret:
                     break
                 
-                frame_counter += 1
-                if frame_counter % frames_to_skip != 0:
-                    continue
-                
-                #cv2.line(frame, startPoint, endPoint, (255,0,0),1) #(imagen,(x1,y1),(x2,y2),(B,G,R),grosor) funcion para dibujar rectangulos en la imagen
+                #Uso del modelo
+                results = model.track(frameVideo, persist=True, conf=0.8)
 
+                frame_ = results[0].plot()
+
+                cv2.line(frame_,(limits[0],limits[1]),(limits[2],limits[3]),(0,0,255),5)
+
+                for r in results:
+                    boxes = r.boxes
+                    for box in boxes:
+                        x1, y1, x2, y2 = box.xyxy[0]
+                        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                        classMalvas = int(box.cls)
+                        if box.id:
+                            id = int(box.id)
+
+                        w, h = x2-x1, y2-y1
+                        cx, cy = x1+w//2, y1+h//2
+
+                        cv2.circle(frame_, (cx,cy),5,(255,0,255),cv2.FILLED)
+
+                        if limits[0] < cx < limits[2] and limits[1] - 20 < cy < limits[3] + 20:
+                            if classMalvas == 0:
+                                if contMalvaBuena.count(id) == 0:
+                                    contMalvaBuena.append(id)
+                            else:
+                                if contMalvaMala.count(id) == 0:
+                                    contMalvaMala.append(id)
+                
+                
                 # Resto del código de procesamiento e inferencia
-                response = model.predict(frameVideo, confidence=70, overlap=30).json()
+                #response = model.predict(frameVideo, confidence=70, overlap=30).json()
 
-                # Resto del código de dibujo de cajas y recuento de malvas
-                for pred in response['predictions']: #recorrer el json de predictions
-                    contFrame = contFrame + 1
-                    x1 = int(pred['x'] - pred['width'] / 2)
-                    y1 = int(pred['y'] - pred['height'] / 2)
-
-                    x2 = int(x1 + pred['width'])
-                    y2 = int(y1 + pred['height'])
-                
-                    if pred['class'] == 'malvaBuena': 
-                        cv2.rectangle(frameVideo,(x1,y1),(x2,y2),(0,102,0),1)#(imagen,(x1,y1),(x2,y2),(B,G,R),grosor) funcion para dibujar rectangulos en la imagen
-                        cv2.putText(frameVideo, 'malvaBuena', (x1,y1-5), font,1,(0,102,0),2,cv2.LINE_AA) #funcion para escribir texto en la imagen
-                        #contMalvaBuena = contMalvaBuena + 1
-                        if y1 <= (frame_height // 2) and y2 >= (frame_height // 2):
-                            contMalvaBuena += 1
-
-                    if pred['class'] == 'malvaMala':
-                        cv2.rectangle(frameVideo,(x1,y1),(x2,y2),(0,0,255),1)
-                        cv2.putText(frameVideo, 'malvaMala', (x1,y1-5), font,1,(0,0,255),2,cv2.LINE_AA)
-                        #contMalvaMala = contMalvaMala + 1
-                        if y1 <= (frame_height // 2) and y2 >= (frame_height // 2):
-                            contMalvaMala += 1
-
-                    if y1 <= (frame_height // 2) and y2 >= (frame_height // 2):
-                        contMalva += 1
-
-                
-                cv2.putText(frameVideo, f'Malvas buenas: {contMalvaBuena}', (10,30), font,1,(0,0,0),2,cv2.LINE_AA)
-                cv2.putText(frameVideo, f'Malvas malas: {contMalvaMala}', (10,60), font,1,(0,0,0),2,cv2.LINE_AA)
                 # Write the frame with bounding boxes to the output video
-                out.write(frameVideo)
+                out.write(frame_)
 
 
             # Release the capture and output objects
@@ -172,20 +160,29 @@ class AnalisisVideoPage(Page):
             out.release()
 
             #Prints (Eliminar)
-            print("La cantidad de malvas buenas es: " + str(contMalvaBuena))
-            print("La cantidad de malvas malas es: " + str(contMalvaMala))
-            print("La cantidad de malvas es: " + str(contMalva))
-            print("La cantidad de frames es: " + str(contFrame))
+            print("La cantidad de malvas buenas es: " + str(len(contMalvaBuena)))
+            print("La cantidad de malvas malas es: " + str(len(contMalvaMala)))
+            print("La cantidad de malvas es: " + str(len(contMalvaMala)+len(contMalvaBuena)))
 
             self.cell2.pack(pady=10, side=BOTTOM)
             #Cargar video y reproducirlo
-            self.lblInputVideo1.load(path_video)
+            self.lblInputVideo1.load("./"+output_path)
             self.lblInputVideo1.play()
 
             #Insertar texto correspondiente a la video
-            self.lblInfo3.configure(text=f"Cantidad de malvas buenas: {contMalvaBuena}")
-            self.lblInfo4.configure(text=f"Cantidad de malvas malas: {contMalvaMala}")
+            self.lblInfo3.configure(text=f"Cantidad de malvas buenas: {len(contMalvaBuena)}")
+            self.lblInfo4.configure(text=f"Cantidad de malvas malas: {len(contMalvaMala)}")
             self.lblInfo5.configure(text=f"Cantidad de malvas por minuto: {0}")
+
+        #Eliminando variables
+        del cap
+        del out
+        del frame_
+        del results
+        del ret
+        del frameVideo
+        del fourcc
+        del output_path
 
     def recargar(self):
         self.lblInputVideo1.play()

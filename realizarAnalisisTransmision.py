@@ -5,6 +5,10 @@ from settings import app_settings
 import cv2
 from PIL import Image, ImageTk
 import pandas as pd
+from ultralytics import YOLO
+
+#Cargar el modelo
+model = YOLO("TrainModelMalva.pt")
 
 class AnalisisTransmisionPage(Page):
     def __init__(self,master):
@@ -38,9 +42,9 @@ class AnalisisTransmisionPage(Page):
         self.text = customtkinter.CTkLabel(self.rootAnalisis, text="Análisis", font=(self.textFont, self.fontSize+12))
         self.text.grid(column=0, pady=10)
 
-        self.lblInfo3 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo3 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas buenas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo3.grid(row=1, pady=15, padx=5)
-        self.lblInfo4 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas volteadas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo4 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo4.grid(row=2, pady=5, padx=5)
         self.lblInfo5 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas por minuto: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo5.grid(row=3, pady=15, padx=5)
@@ -62,6 +66,10 @@ class AnalisisTransmisionPage(Page):
         self.camera_dropdown.configure(width=130, height=40, font=(self.textFont, 16), dropdown_font=(self.textFont, 16))
 
     def toggle_transmission(self):
+        #Definir variables
+        global contMalvaBuena, contMalvaMala
+        contMalvaBuena = []
+        contMalvaMala = []
         if self.cap is None:
             selected_camera_index = self.camera_list.index(self.camera_var.get())
             self.cap = cv2.VideoCapture(selected_camera_index)
@@ -80,7 +88,7 @@ class AnalisisTransmisionPage(Page):
     def get_camera_list(self):
         # Obtener una lista de cámaras disponibles
         camera_list = []
-        for i in range(10):  # Suponemos que hay 10 cámaras como máximo
+        for i in range(3):  # Suponemos que hay 10 cámaras como máximo
             cap = cv2.VideoCapture(i)
             if cap.isOpened():
                 camera_list.append(f"Cámara {i + 1}")
@@ -93,16 +101,54 @@ class AnalisisTransmisionPage(Page):
         print(df.head(5))
     
     def update_frame(self):
+        #Limit line
+        limits = [10,300,800,300]
+
         if self.cap is not None:
             ret, frame = self.cap.read()
             if ret:
-                frame = cv2.resize(frame, (400, 400))
+                
+                #Uso del modelo
+                results = model.track(frame, persist=True, conf=0.8)
+
+                frame_ = results[0].plot()
+
+                cv2.line(frame_,(limits[0],limits[1]),(limits[2],limits[3]),(0,0,255),5)
+
+                for r in results:
+                    boxes = r.boxes
+                    for box in boxes:
+                        x1, y1, x2, y2 = box.xyxy[0]
+                        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                        classMalvas = int(box.cls)
+                        if box.id:
+                            id = int(box.id)
+
+                        w, h = x2-x1, y2-y1
+                        cx, cy = x1+w//2, y1+h//2
+
+                        cv2.circle(frame_, (cx,cy),5,(255,0,255),cv2.FILLED)
+
+                        if limits[0] < cx < limits[2] and limits[1] - 20 < cy < limits[3] + 20:
+                            if classMalvas == 0:
+                                if contMalvaBuena.count(id) == 0:
+                                    contMalvaBuena.append(id)
+                            else:
+                                if contMalvaMala.count(id) == 0:
+                                    contMalvaMala.append(id)
+
+                frame = cv2.resize(frame_, (400, 400))
                 img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 img = Image.fromarray(img)
                 imgtk = ImageTk.PhotoImage(image=img)
                 self.lblInputImage1.imgtk = imgtk
                 self.lblInputImage1.configure(image=imgtk)
                 self.frame.after(10, self.update_frame)
+
+                #Insertar texto correspondiente a la video
+                self.lblInfo3.configure(text=f"Cantidad de malvas buenas: {len(contMalvaBuena)}")
+                self.lblInfo4.configure(text=f"Cantidad de malvas malas: {len(contMalvaMala)}")
+                self.lblInfo5.configure(text=f"Cantidad de malvas por minuto: {0}")
 
     def volver(self):
         self.stop_transmission()  # Asegurarse de detener la transmisión antes de cambiar de página
