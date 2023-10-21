@@ -49,7 +49,7 @@ class AnalisisFotoPage(Page):
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
         self.lblInfo6.grid(row=3, pady=5)
 
-        self.error = customtkinter.CTkLabel(self.rootAnalisis, text="Primero debe analizar foto")
+        self.error = customtkinter.CTkLabel(self.rootAnalisis, text="Surgió un error al exportar el excel")
 
         self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(self.textFont, self.fontSize), command=self.volver, fg_color='dark red')
         self.volver_button.grid(row=2, column=1, pady=30)
@@ -57,16 +57,17 @@ class AnalisisFotoPage(Page):
     def exportar_excel(self):
         try:
             now = datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            current_date = now.strftime("%d-%m-%Y")
-            df = pd.read_excel('../../exportado.xlsx', index_col=0)
-            datos = pd.DataFrame([{'fecha':current_date,'hora':current_time,'Buenas':contMalvaBuena,'Malas':contMalvaMala}])
+            finish_time = now.strftime("%H:%M:%S")
+            finish_date = now.strftime("%d-%m-%Y")
+            df = pd.read_excel('./exportado.xlsx', index_col=0)
+            totalMalvas = contMalvaBuena+contMalvaMala
+            datos = pd.DataFrame([{'fecha inicio':finish_date,'hora inicio':finish_time,'fecha final':finish_date,'hora final':finish_time,'Buenas':contMalvaBuena,'Malas':contMalvaMala,'Total':totalMalvas,'Porcentaje buenas':100*contMalvaBuena/totalMalvas,'Tipo':'Foto'}])
             df = pd.concat([df, datos], ignore_index=True)
-            df.to_excel("../../exportado.xlsx")
+            df.to_excel("./exportado.xlsx")
             self.error.grid_forget()
             print(df)
         except Exception as e:
-            print("Primero analice la foto")
+            print("Surgió un error al exportar el excel")
             self.error.grid(row=4)
         
     

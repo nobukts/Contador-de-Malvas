@@ -6,6 +6,7 @@ import cv2
 from PIL import Image, ImageTk
 import pandas as pd
 from ultralytics import YOLO
+from datetime import datetime
 
 #Cargar el modelo
 model = YOLO("TrainModelMalva.pt")
@@ -50,6 +51,8 @@ class AnalisisTransmisionPage(Page):
         self.lblInfo5.grid(row=3, pady=15, padx=5)
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
         self.lblInfo6.grid(row=4, pady=5)
+
+        self.error = customtkinter.CTkLabel(self.rootAnalisis, text="Surgió un error al exportar el excel")
         
         self.cap = None # Inicialmente, no hay captura activa
 
@@ -70,7 +73,14 @@ class AnalisisTransmisionPage(Page):
         global contMalvaBuena, contMalvaMala
         contMalvaBuena = []
         contMalvaMala = []
+
+        
+
         if self.cap is None:
+            #guardar tiempo de inicio
+            global start_datetime
+            start_datetime = datetime.now()
+
             selected_camera_index = self.camera_list.index(self.camera_var.get())
             self.cap = cv2.VideoCapture(selected_camera_index)
             self.update_frame()  # Iniciar la transmisión
@@ -78,6 +88,9 @@ class AnalisisTransmisionPage(Page):
         else:
             self.stop_transmission()  # Detener la transmisión
             self.toggle_transmission_button.configure(text="Iniciar Transmisión")
+            #guardar tiempo final
+            global finish_datetime
+            finish_datetime = datetime.now()
 
     def stop_transmission(self):
         if self.cap is not None:
@@ -96,9 +109,27 @@ class AnalisisTransmisionPage(Page):
         return camera_list
     
     def exportar_excel(self):
-        df = pd.read_excel("prueba.xlsx")
-        df.to_excel("COPIADO.xlsx")
-        print(df.head(5))
+        try:
+            totalMalvas = len(contMalvaBuena) + len(contMalvaMala)
+            porcentaje = 100*len(contMalvaBuena)/totalMalvas
+        except Exception as e:
+            print("Error al calcular el porcentaje")
+            porcentaje = 0
+        
+        try:
+            finish_time = finish_datetime.strftime("%H:%M:%S")
+            finish_date = finish_datetime.strftime("%d-%m-%Y")
+            start_time = start_datetime.strftime("%H:%M:%S")
+            start_date = start_datetime.strftime("%d-%m-%Y")
+            df = pd.read_excel('./exportado.xlsx', index_col=0)
+            datos = pd.DataFrame([{'fecha inicio':start_date,'hora inicio':start_time,'fecha final':finish_date,'hora final':finish_time,'Buenas':len(contMalvaBuena),'Malas':len(contMalvaMala),'Total':totalMalvas,'Porcentaje buenas':porcentaje,'Tipo':'Transmision'}])
+            df = pd.concat([df, datos], ignore_index=True)
+            df.to_excel("./exportado.xlsx")
+            self.error.grid_forget()
+            print(df)
+        except Exception as e:
+            print("Surgió un error al exportar el excel")
+            self.error.grid(row=5)
     
     def update_frame(self):
         #Limit line

@@ -59,7 +59,7 @@ class AnalisisVideoPage(Page):
 
         self.cell2 = customtkinter.CTkButton(self.rootZonaVideo, text="Recargar", width=25, command=self.recargar)
 
-        self.error = customtkinter.CTkLabel(self.rootAnalisis, text="Primero debe analizar foto")
+        self.error = customtkinter.CTkLabel(self.rootAnalisis, text="Surgió un error al exportar el excel")
 
         self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(self.textFont, self.fontSize), command=self.volver, fg_color='dark red')
         self.volver_button.grid(row=2, column=1, pady=30)
@@ -67,17 +67,26 @@ class AnalisisVideoPage(Page):
     
     def exportar_excel(self):
         try:
-            now = datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            current_date = now.strftime("%d-%m-%Y")
-            df = pd.read_excel('exportado.xlsx', index_col=0)
-            datos = pd.DataFrame([{'fecha':current_date,'hora':current_time,'Buenas':contMalvaBuena,'Malas':contMalvaMala}])
+            totalMalvas = len(contMalvaBuena) + len(contMalvaMala)
+            porcentaje = 100*len(contMalvaBuena)/totalMalvas
+        except Exception as e:
+            print("Error al calcular el porcentaje")
+            porcentaje = 0
+        
+        try:
+            finish_time = finish_datetime.strftime("%H:%M:%S")
+            finish_date = finish_datetime.strftime("%d-%m-%Y")
+            start_time = start_datetime.strftime("%H:%M:%S")
+            start_date = start_datetime.strftime("%d-%m-%Y")
+            df = pd.read_excel('./exportado.xlsx', index_col=0)
+            totalMalvas = len(contMalvaBuena) + len(contMalvaMala)
+            datos = pd.DataFrame([{'fecha inicio':start_date,'hora inicio':start_time,'fecha final':finish_date,'hora final':finish_time,'Buenas':len(contMalvaBuena),'Malas':len(contMalvaMala),'Total':totalMalvas,'Porcentaje buenas':porcentaje,'Tipo':'Video'}])
             df = pd.concat([df, datos], ignore_index=True)
-            df.to_excel("exportado.xlsx")
+            df.to_excel("./exportado.xlsx")
             self.error.grid_forget()
             print(df)
         except Exception as e:
-            print("Primero analice la foto")
+            print("Surgió un error al exportar el excel")
             self.error.grid(row=5)
     
     def elegir_video(self):
@@ -86,6 +95,10 @@ class AnalisisVideoPage(Page):
                                                         ("video",".avi")])
         self.lblInputVideo1.pack(expand=True, fill="both")
         if len(path_video) > 0:
+            #guardar tiempo de inicio
+            global start_datetime
+            start_datetime = datetime.now()
+
             #Cargar el video
             cap = cv2.VideoCapture(path_video)
             self.lblInputVideo1.pack(expand=True, fill="both")
@@ -183,6 +196,10 @@ class AnalisisVideoPage(Page):
         del frameVideo
         del fourcc
         del output_path
+
+        #guardar tiempo final
+        global finish_datetime
+        finish_datetime = datetime.now()
 
     def recargar(self):
         self.lblInputVideo1.play()
