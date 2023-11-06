@@ -2,7 +2,7 @@ from tkinter import *
 import customtkinter
 from page import Page
 from settings import app_settings
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from tkVideoPlayer import TkinterVideo
 import pandas as pd
 import cv2
@@ -59,8 +59,6 @@ class AnalisisVideoPage(Page):
 
         self.cell2 = customtkinter.CTkButton(self.rootZonaVideo, text="Recargar", width=25, command=self.recargar)
 
-        self.error = customtkinter.CTkLabel(self.rootAnalisis, text="Surgió un error al exportar el excel")
-
         self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(self.textFont, self.fontSize), command=self.volver, fg_color='dark red')
         self.volver_button.grid(row=2, column=1, pady=30)
         
@@ -68,10 +66,14 @@ class AnalisisVideoPage(Page):
     def exportar_excel(self):
         try:
             totalMalvas = len(contMalvaBuena) + len(contMalvaMala)
-            porcentaje = 100*len(contMalvaBuena)/totalMalvas
+            porcentajeBuenas = 100*len(contMalvaBuena)/totalMalvas
+            porcentajeMalas = 100*len(contMalvaMala)/totalMalvas
+            porcentajeBuenas = round(porcentajeBuenas, 2)
+            porcentajeMalas = round(porcentajeMalas, 2)
         except Exception as e:
             print("Error al calcular el porcentaje")
-            porcentaje = 0
+            porcentajeBuenas = 0
+            porcentajeMalas = 0
         
         try:
             finish_time = finish_datetime.strftime("%H:%M:%S")
@@ -80,14 +82,14 @@ class AnalisisVideoPage(Page):
             start_date = start_datetime.strftime("%d-%m-%Y")
             df = pd.read_excel('./exportado.xlsx', index_col=0)
             totalMalvas = len(contMalvaBuena) + len(contMalvaMala)
-            datos = pd.DataFrame([{'fecha inicio':start_date,'hora inicio':start_time,'fecha final':finish_date,'hora final':finish_time,'Buenas':len(contMalvaBuena),'Malas':len(contMalvaMala),'Total':totalMalvas,'Porcentaje buenas':porcentaje,'Tipo':'Video'}])
+            datos = pd.DataFrame([{'fecha inicio':start_date,'hora inicio':start_time,'fecha final':finish_date,'hora final':finish_time,'Buenas':len(contMalvaBuena),'Malas':len(contMalvaMala),'Total':totalMalvas,'%buenas':porcentajeBuenas,'%malas':porcentajeMalas,'Tipo':'Video'}])
             df = pd.concat([df, datos], ignore_index=True)
             df.to_excel("./exportado.xlsx")
-            self.error.grid_forget()
+            messagebox.showinfo(title="Exportado correctamente",message="Se ha exportado correctamente")
             print(df)
         except Exception as e:
             print("Surgió un error al exportar el excel")
-            self.error.grid(row=5)
+            messagebox.showerror(title="Exportado incorrectamente",message="Hubo un problema al exportar el excel")
     
     def elegir_video(self):
         path_video = filedialog.askopenfilename(filetypes=[("video", ".mp4"),

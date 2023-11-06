@@ -8,6 +8,7 @@ from realizarAnalisisVideo import AnalisisVideoPage
 from realizarAnalisisTransmision import AnalisisTransmisionPage
 import customtkinter
 from settings import app_settings
+from tkinter import messagebox
 
 # Convierte el valor booleano a una cadena "dark" o "light"
 mode_string = "dark" if app_settings.darkMode else "light"
@@ -46,6 +47,11 @@ class App(customtkinter.CTk):
         }
 
         self.show_page("main")
+        self.protocol("WM_DELETE_WINDOW",self.on_closing)
+    
+    def on_closing(self):
+        if messagebox.askokcancel("Cerrar", "¿Quieres cerrar la aplicación? Si no ha exportado sus datos, estos se perderán"):
+            self.destroy()
 
     def show_page(self, page_name):
         for page in self.pages.values():

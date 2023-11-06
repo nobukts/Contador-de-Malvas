@@ -1,6 +1,6 @@
 import customtkinter
 from page import Page
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import cv2
 import imutils
 from PIL import Image, ImageTk
@@ -8,6 +8,7 @@ import pandas as pd
 from datetime import datetime
 from settings import app_settings
 from ultralytics import YOLO
+import time
 
 #Cargar el modelo
 model = YOLO("TrainModelMalva.pt")
@@ -49,26 +50,34 @@ class AnalisisFotoPage(Page):
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
         self.lblInfo6.grid(row=3, pady=5)
 
-        self.error = customtkinter.CTkLabel(self.rootAnalisis, text="Surgió un error al exportar el excel")
-
         self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(self.textFont, self.fontSize), command=self.volver, fg_color='dark red')
         self.volver_button.grid(row=2, column=1, pady=30)
 
     def exportar_excel(self):
         try:
+            totalMalvas = contMalvaBuena+contMalvaMala
+            porcentajeBuenas = 100*contMalvaBuena/totalMalvas
+            porcentajeMalas = 100*contMalvaMala/totalMalvas
+            porcentajeBuenas = round(porcentajeBuenas, 2)
+            porcentajeMalas = round(porcentajeMalas, 2)
+        except Exception as e:
+            print("Error al calcular el porcentaje")
+            porcentajeBuenas = 0
+            porcentajeMalas = 0
+
+        try:
             now = datetime.now()
             finish_time = now.strftime("%H:%M:%S")
             finish_date = now.strftime("%d-%m-%Y")
             df = pd.read_excel('./exportado.xlsx', index_col=0)
-            totalMalvas = contMalvaBuena+contMalvaMala
-            datos = pd.DataFrame([{'fecha inicio':finish_date,'hora inicio':finish_time,'fecha final':finish_date,'hora final':finish_time,'Buenas':contMalvaBuena,'Malas':contMalvaMala,'Total':totalMalvas,'Porcentaje buenas':100*contMalvaBuena/totalMalvas,'Tipo':'Foto'}])
+            datos = pd.DataFrame([{'fecha inicio':finish_date,'hora inicio':finish_time,'fecha final':finish_date,'hora final':finish_time,'Buenas':contMalvaBuena,'Malas':contMalvaMala,'Total':totalMalvas,'%buenas':porcentajeBuenas,'%malas':porcentajeMalas,'Tipo':'Foto'}])
             df = pd.concat([df, datos], ignore_index=True)
             df.to_excel("./exportado.xlsx")
-            self.error.grid_forget()
+            messagebox.showinfo(title="Exportado correctamente",message="Se ha exportado correctamente")
             print(df)
         except Exception as e:
             print("Surgió un error al exportar el excel")
-            self.error.grid(row=4)
+            messagebox.showerror(title="Exportado incorrectamente",message="Hubo un problema al exportar el excel")
         
     
     def elegir_imagen(self):
