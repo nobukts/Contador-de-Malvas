@@ -48,10 +48,12 @@ class AnalisisTransmisionPage(Page):
         self.lblInfo3.grid(row=1, pady=15, padx=5)
         self.lblInfo4 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo4.grid(row=2, pady=5, padx=5)
-        self.lblInfo5 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas por minuto: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo5 = customtkinter.CTkLabel(self.rootAnalisis, text="Porcentaje de malvas buenas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo5.grid(row=3, pady=15, padx=5)
+        self.lblInfo7 = customtkinter.CTkLabel(self.rootAnalisis, text="Porcentaje de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo7.grid(row=4, pady=5, padx=5)
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
-        self.lblInfo6.grid(row=4, pady=5)
+        self.lblInfo6.grid(row=5, pady=15)
         
         self.cap = None # Inicialmente, no hay captura activa
 
@@ -117,16 +119,6 @@ class AnalisisTransmisionPage(Page):
         try:
             if flag_export:
                 #Exportar excel cuando la transmisión esté detenida
-                try:
-                    totalMalvas = len(contMalvaBuena) + len(contMalvaMala)
-                    porcentajeBuenas = 100*len(contMalvaBuena)/totalMalvas
-                    porcentajeMalas = 100*len(contMalvaMala)/totalMalvas
-                    porcentajeBuenas = round(porcentajeBuenas, 2)
-                    porcentajeMalas = round(porcentajeMalas, 2)
-                except Exception as e:
-                    print("Error al calcular el porcentaje")
-                    porcentajeBuenas = 0
-                    porcentajeMalas = 0
                 
                 try:
                     finish_time = finish_datetime.strftime("%H:%M:%S")
@@ -193,10 +185,23 @@ class AnalisisTransmisionPage(Page):
                 self.lblInputImage1.configure(image=imgtk)
                 self.frame.after(10, self.update_frame)
 
+                global porcentajeBuenas, porcentajeMalas, totalMalvas
+                try:
+                    totalMalvas = len(contMalvaBuena) + len(contMalvaMala)
+                    porcentajeBuenas = 100*len(contMalvaBuena)/totalMalvas
+                    porcentajeMalas = 100*len(contMalvaMala)/totalMalvas
+                    porcentajeBuenas = round(porcentajeBuenas, 2)
+                    porcentajeMalas = round(porcentajeMalas, 2)
+                except Exception as e:
+                    print("Error al calcular el porcentaje")
+                    porcentajeBuenas = 0
+                    porcentajeMalas = 0
+                
                 #Insertar texto correspondiente a la video
                 self.lblInfo3.configure(text=f"Cantidad de malvas buenas: {len(contMalvaBuena)}")
                 self.lblInfo4.configure(text=f"Cantidad de malvas malas: {len(contMalvaMala)}")
-                self.lblInfo5.configure(text=f"Cantidad de malvas por minuto: {0}")
+                self.lblInfo5.configure(text=f"Porcentaje de malvas buenas: {porcentajeBuenas}%")
+                self.lblInfo7.configure(text=f"Porcentaje de malvas malas: {porcentajeMalas}%")
 
     def volver(self):
         self.stop_transmission()  # Asegurarse de detener la transmisión antes de cambiar de página

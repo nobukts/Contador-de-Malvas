@@ -38,14 +38,16 @@ class AnalisisVideoPage(Page):
         self.text = customtkinter.CTkLabel(self.rootAnalisis, text="Análisis", font=(self.textFont, self.fontSize+12))
         self.text.grid(column=0, pady=10)
 
-        self.lblInfo3 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo3 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas buenas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo3.grid(row=1, pady=15, padx=5)
-        self.lblInfo4 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas volteadas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo4 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo4.grid(row=2, pady=5, padx=5)
-        self.lblInfo5 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas por minuto: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo5 = customtkinter.CTkLabel(self.rootAnalisis, text="Porcentaje de malvas buenas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo5.grid(row=3, pady=15, padx=5)
+        self.lblInfo7 = customtkinter.CTkLabel(self.rootAnalisis, text="Porcentaje de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo7.grid(row=4, pady=5, padx=5)
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
-        self.lblInfo6.grid(row=4, pady=5)
+        self.lblInfo6.grid(row=5, pady=15)
 
         #Configurar video
         self.rootZonaVideo = customtkinter.CTkFrame(self.root, corner_radius=0, fg_color="transparent")
@@ -64,16 +66,6 @@ class AnalisisVideoPage(Page):
         
     
     def exportar_excel(self):
-        try:
-            totalMalvas = len(contMalvaBuena) + len(contMalvaMala)
-            porcentajeBuenas = 100*len(contMalvaBuena)/totalMalvas
-            porcentajeMalas = 100*len(contMalvaMala)/totalMalvas
-            porcentajeBuenas = round(porcentajeBuenas, 2)
-            porcentajeMalas = round(porcentajeMalas, 2)
-        except Exception as e:
-            print("Error al calcular el porcentaje")
-            porcentajeBuenas = 0
-            porcentajeMalas = 0
         
         try:
             finish_time = finish_datetime.strftime("%H:%M:%S")
@@ -81,7 +73,6 @@ class AnalisisVideoPage(Page):
             start_time = start_datetime.strftime("%H:%M:%S")
             start_date = start_datetime.strftime("%d-%m-%Y")
             df = pd.read_excel('./exportado.xlsx', index_col=0)
-            totalMalvas = len(contMalvaBuena) + len(contMalvaMala)
             datos = pd.DataFrame([{'fecha inicio':start_date,'hora inicio':start_time,'fecha final':finish_date,'hora final':finish_time,'Buenas':len(contMalvaBuena),'Malas':len(contMalvaMala),'Total':totalMalvas,'%buenas':porcentajeBuenas,'%malas':porcentajeMalas,'Tipo':'Video'}])
             df = pd.concat([df, datos], ignore_index=True)
             df.to_excel("./exportado.xlsx")
@@ -118,6 +109,7 @@ class AnalisisVideoPage(Page):
 
             #Definir variables
             global contMalvaBuena, contMalvaMala
+            global porcentajeBuenas, porcentajeMalas, totalMalvas
             contMalvaBuena = []
             contMalvaMala = []
 
@@ -174,20 +166,27 @@ class AnalisisVideoPage(Page):
             cap.release()
             out.release()
 
-            #Prints (Eliminar)
-            print("La cantidad de malvas buenas es: " + str(len(contMalvaBuena)))
-            print("La cantidad de malvas malas es: " + str(len(contMalvaMala)))
-            print("La cantidad de malvas es: " + str(len(contMalvaMala)+len(contMalvaBuena)))
-
             self.cell2.pack(pady=10, side=BOTTOM)
             #Cargar video y reproducirlo
             self.lblInputVideo1.load("./"+output_path)
             self.lblInputVideo1.play()
 
+            try:
+                totalMalvas = len(contMalvaBuena) + len(contMalvaMala)
+                porcentajeBuenas = 100*len(contMalvaBuena)/totalMalvas
+                porcentajeMalas = 100*len(contMalvaMala)/totalMalvas
+                porcentajeBuenas = round(porcentajeBuenas, 2)
+                porcentajeMalas = round(porcentajeMalas, 2)
+            except Exception as e:
+                print("Error al calcular el porcentaje")
+                porcentajeBuenas = 0
+                porcentajeMalas = 0
+            
             #Insertar texto correspondiente a la video
             self.lblInfo3.configure(text=f"Cantidad de malvas buenas: {len(contMalvaBuena)}")
             self.lblInfo4.configure(text=f"Cantidad de malvas malas: {len(contMalvaMala)}")
-            self.lblInfo5.configure(text=f"Cantidad de malvas por minuto: {0}")
+            self.lblInfo5.configure(text=f"Porcentaje de malvas buenas: {porcentajeBuenas}%")
+            self.lblInfo7.configure(text=f"Porcentaje de malvas malas: {porcentajeMalas}%")
 
         #Eliminando variables
         del cap

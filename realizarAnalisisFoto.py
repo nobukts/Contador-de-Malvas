@@ -44,26 +44,20 @@ class AnalisisFotoPage(Page):
         self.text.grid(column=0, pady=10)
 
         self.lblInfo3 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas buenas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8", "#3a3a3a"), text_color=("black", "white"), padx=10)
-        self.lblInfo3.grid(row=1, pady=5, padx=5)
+        self.lblInfo3.grid(row=1, pady=15, padx=5)
         self.lblInfo4 = customtkinter.CTkLabel(self.rootAnalisis, text="Cantidad de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8", "#3a3a3a"), text_color=("black", "white"), padx=10)
-        self.lblInfo4.grid(row=2, pady=15, padx=5)
+        self.lblInfo4.grid(row=2, pady=5, padx=5)
+        self.lblInfo5 = customtkinter.CTkLabel(self.rootAnalisis, text="Porcentaje de malvas buenas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo5.grid(row=3, pady=15, padx=5)
+        self.lblInfo7 = customtkinter.CTkLabel(self.rootAnalisis, text="Porcentaje de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo7.grid(row=4, pady=5, padx=5)
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
-        self.lblInfo6.grid(row=3, pady=5)
+        self.lblInfo6.grid(row=5, pady=15)
 
         self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(self.textFont, self.fontSize), command=self.volver, fg_color='dark red')
         self.volver_button.grid(row=2, column=1, pady=30)
 
     def exportar_excel(self):
-        try:
-            totalMalvas = contMalvaBuena+contMalvaMala
-            porcentajeBuenas = 100*contMalvaBuena/totalMalvas
-            porcentajeMalas = 100*contMalvaMala/totalMalvas
-            porcentajeBuenas = round(porcentajeBuenas, 2)
-            porcentajeMalas = round(porcentajeMalas, 2)
-        except Exception as e:
-            print("Error al calcular el porcentaje")
-            porcentajeBuenas = 0
-            porcentajeMalas = 0
 
         try:
             now = datetime.now()
@@ -86,6 +80,7 @@ class AnalisisFotoPage(Page):
                                                         ("image",".png")])
         if len(path_image) > 0:
             global contMalvaBuena, contMalvaMala
+            global porcentajeBuenas, porcentajeMalas, totalMalvas
             contMalvaMala = 0
             contMalvaBuena = 0
             #obtención de imagen
@@ -125,11 +120,23 @@ class AnalisisFotoPage(Page):
             im = Image.fromarray(imageToShow2)
             img = ImageTk.PhotoImage(image=im, size=(30,30))
 
+            try:
+                totalMalvas = contMalvaBuena+contMalvaMala
+                porcentajeBuenas = 100*contMalvaBuena/totalMalvas
+                porcentajeMalas = 100*contMalvaMala/totalMalvas
+                porcentajeBuenas = round(porcentajeBuenas, 2)
+                porcentajeMalas = round(porcentajeMalas, 2)
+            except Exception as e:
+                print("Error al calcular el porcentaje")
+                porcentajeBuenas = 0
+                porcentajeMalas = 0
+            
             self.lblInfo3.configure(text=f"Cantidad de malvas buenas: {contMalvaBuena}")
             self.lblInfo4.configure(text=f"Cantidad de malvas malas: {contMalvaMala}")
+            self.lblInfo5.configure(text=f"Porcentaje de malvas buenas: {porcentajeBuenas}%")
+            self.lblInfo7.configure(text=f"Porcentaje de malvas malas: {porcentajeMalas}%")
 
             self.lblInputImage1.configure(image=img)
-            print("--------------------------------------HOLA-----------------------------------------")
 
 
     def volver(self):
