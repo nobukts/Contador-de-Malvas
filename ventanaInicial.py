@@ -1,3 +1,4 @@
+import multiprocessing
 from tkinter import *
 from page import Page, AyudaPage
 from mainPage import MainPage
@@ -80,5 +81,7 @@ class App(customtkinter.CTk):
         self.show_page("analisis_transmision")
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
+    
     app = App()
     app.mainloop()
