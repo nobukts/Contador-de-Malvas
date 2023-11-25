@@ -134,7 +134,7 @@ class AnalisisVideoPage(Page):
 
                 frame_ = results[0].plot()
 
-                cv2.line(frame_,(limits[0],limits[1]),(limits[2],limits[3]),(0,0,255),5)
+                #cv2.line(frame_,(limits[0],limits[1]),(limits[2],limits[3]),(0,0,255),5)
 
                 for r in results:
                     boxes = r.boxes

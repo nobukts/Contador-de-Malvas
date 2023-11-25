@@ -155,7 +155,7 @@ class AnalisisTransmisionPage(Page):
                 line_height, line_width, _ = frame.shape
                 limits = [0,int(line_height/2),line_width,int(line_height/2)]
 
-                cv2.line(frame_,(limits[0],limits[1]),(limits[2],limits[3]),(0,0,255),5)
+                #cv2.line(frame_,(limits[0],limits[1]),(limits[2],limits[3]),(0,0,255),5)
 
                 for r in results:
                     boxes = r.boxes
