@@ -31,7 +31,7 @@ class AnalisisFotoPage(Page):
 
         self.rootAnalisis = customtkinter.CTkFrame(self.root, width=140, corner_radius=0)
         self.rootAnalisis.grid(row=0, rowspan=2, column=1)
-        self.rootAnalisis.grid_rowconfigure((0, 1, 2, 3, 4), weight=1)
+        self.rootAnalisis.grid_rowconfigure((0, 1, 2, 3, 4, 5, 6), weight=1)
 
         # Pantalla de inicio
         self.cell1 = customtkinter.CTkButton(self.root, text="Cambiar foto", width=25, command=self.elegir_imagen)
@@ -51,8 +51,10 @@ class AnalisisFotoPage(Page):
         self.lblInfo5.grid(row=3, pady=15, padx=5)
         self.lblInfo7 = customtkinter.CTkLabel(self.rootAnalisis, text="Porcentaje de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo7.grid(row=4, pady=5, padx=5)
+        self.lblInfo8 = customtkinter.CTkLabel(self.rootAnalisis, text="Total de malvas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo8.grid(row=5, pady=15, padx=5)
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
-        self.lblInfo6.grid(row=5, pady=15)
+        self.lblInfo6.grid(row=6, pady=5)
 
         self.volver_button = customtkinter.CTkButton(self.frame, text="Regresar", width=10, font=(self.textFont, self.fontSize), command=self.volver, fg_color='dark red')
         self.volver_button.grid(row=2, column=1, pady=30)
@@ -135,6 +137,7 @@ class AnalisisFotoPage(Page):
             self.lblInfo4.configure(text=f"Cantidad de malvas malas: {contMalvaMala}")
             self.lblInfo5.configure(text=f"Porcentaje de malvas buenas: {porcentajeBuenas}%")
             self.lblInfo7.configure(text=f"Porcentaje de malvas malas: {porcentajeMalas}%")
+            self.lblInfo8.configure(text=f"Total de malvas: {contMalvaBuena+contMalvaMala}")
 
             self.lblInputImage1.configure(image=img)
 

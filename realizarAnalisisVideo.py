@@ -33,7 +33,7 @@ class AnalisisVideoPage(Page):
         #Configurar analisis
         self.rootAnalisis = customtkinter.CTkFrame(self.root, width=140, corner_radius=0)
         self.rootAnalisis.grid(row=0, rowspan=2, column=1)
-        self.rootAnalisis.grid_rowconfigure((0,1,2,3,4,5), weight=1)
+        self.rootAnalisis.grid_rowconfigure((0,1,2,3,4,5,6), weight=1)
 
         self.text = customtkinter.CTkLabel(self.rootAnalisis, text="Análisis", font=(self.textFont, self.fontSize+12))
         self.text.grid(column=0, pady=10)
@@ -46,8 +46,10 @@ class AnalisisVideoPage(Page):
         self.lblInfo5.grid(row=3, pady=15, padx=5)
         self.lblInfo7 = customtkinter.CTkLabel(self.rootAnalisis, text="Porcentaje de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo7.grid(row=4, pady=5, padx=5)
+        self.lblInfo8 = customtkinter.CTkLabel(self.rootAnalisis, text="Total de malvas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo8.grid(row=5, pady=15, padx=5)
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
-        self.lblInfo6.grid(row=5, pady=15)
+        self.lblInfo6.grid(row=6, pady=5)
 
         #Configurar video
         self.rootZonaVideo = customtkinter.CTkFrame(self.root, corner_radius=0, fg_color="transparent")
@@ -114,7 +116,9 @@ class AnalisisVideoPage(Page):
             contMalvaMala = []
 
             #Limit line
-            limits = [10,300,800,300]
+            line_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            line_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            limits = [0,int(line_height/2),line_width,int(line_height/2)]
 
             #definir punto de inicio y fin de linea a dibujar
             #startPoint = (0, frame_height // 2)
@@ -187,6 +191,7 @@ class AnalisisVideoPage(Page):
             self.lblInfo4.configure(text=f"Cantidad de malvas malas: {len(contMalvaMala)}")
             self.lblInfo5.configure(text=f"Porcentaje de malvas buenas: {porcentajeBuenas}%")
             self.lblInfo7.configure(text=f"Porcentaje de malvas malas: {porcentajeMalas}%")
+            self.lblInfo8.configure(text=f"Total de malvas: {len(contMalvaBuena)+len(contMalvaMala)}")
 
         #Eliminando variables
         del cap

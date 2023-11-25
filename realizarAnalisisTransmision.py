@@ -32,7 +32,7 @@ class AnalisisTransmisionPage(Page):
 
         self.rootAnalisis = customtkinter.CTkFrame(self.root, width=140, corner_radius=0)
         self.rootAnalisis.grid(row=0, rowspan=2, column=1)
-        self.rootAnalisis.grid_rowconfigure((0,1,2,3,4), weight=1)
+        self.rootAnalisis.grid_rowconfigure((0,1,2,3,4,5,6), weight=1)
 
         # Pantalla de inicio
         self.toggle_transmission_button = customtkinter.CTkButton(self.root, text="Iniciar Transmisión", width=25, command=self.toggle_transmission)
@@ -52,8 +52,10 @@ class AnalisisTransmisionPage(Page):
         self.lblInfo5.grid(row=3, pady=15, padx=5)
         self.lblInfo7 = customtkinter.CTkLabel(self.rootAnalisis, text="Porcentaje de malvas malas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
         self.lblInfo7.grid(row=4, pady=5, padx=5)
+        self.lblInfo8 = customtkinter.CTkLabel(self.rootAnalisis, text="Total de malvas: 0", font=(self.textFont, self.fontSize), fg_color=("#c8c8c8","#3a3a3a"), text_color=("black","white"), padx=10)
+        self.lblInfo8.grid(row=5, pady=15, padx=5)
         self.lblInfo6 = customtkinter.CTkButton(self.rootAnalisis, text="Exportar excel", command=self.exportar_excel)
-        self.lblInfo6.grid(row=5, pady=15)
+        self.lblInfo6.grid(row=6, pady=5)
         
         self.cap = None # Inicialmente, no hay captura activa
 
@@ -76,12 +78,10 @@ class AnalisisTransmisionPage(Page):
         global contMalvaBuena, contMalvaMala
         global flag_export
         flag_export = True
-        contMalvaBuena = []
-        contMalvaMala = []
-
-        
 
         if self.cap is None:
+            contMalvaBuena = []
+            contMalvaMala = []
             #guardar tiempo de inicio
             global start_datetime
             flag_export = False
@@ -141,8 +141,6 @@ class AnalisisTransmisionPage(Page):
             messagebox.showerror(title="Exportado incorrectamente",message="Hubo un problema al exportar el excel")
     
     def update_frame(self):
-        #Limit line
-        limits = [10,300,800,300]
 
         if self.cap is not None:
             ret, frame = self.cap.read()
@@ -152,6 +150,10 @@ class AnalisisTransmisionPage(Page):
                 results = model.track(frame, persist=True, conf=0.8)
 
                 frame_ = results[0].plot()
+
+                #Limit line
+                line_height, line_width, _ = frame.shape
+                limits = [0,int(line_height/2),line_width,int(line_height/2)]
 
                 cv2.line(frame_,(limits[0],limits[1]),(limits[2],limits[3]),(0,0,255),5)
 
@@ -202,6 +204,7 @@ class AnalisisTransmisionPage(Page):
                 self.lblInfo4.configure(text=f"Cantidad de malvas malas: {len(contMalvaMala)}")
                 self.lblInfo5.configure(text=f"Porcentaje de malvas buenas: {porcentajeBuenas}%")
                 self.lblInfo7.configure(text=f"Porcentaje de malvas malas: {porcentajeMalas}%")
+                self.lblInfo8.configure(text=f"Total de malvas: {len(contMalvaBuena)+len(contMalvaMala)}")
 
     def volver(self):
         self.stop_transmission()  # Asegurarse de detener la transmisión antes de cambiar de página
